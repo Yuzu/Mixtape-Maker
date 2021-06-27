@@ -3,32 +3,38 @@ from spotipy.oauth2 import SpotifyOAuth
 import json
 import random
 import time
+import sys
+
 
 def main():
 
     cid, secret = getCreds()
+    if cid is None or secret is None:
+        print("Invalid credentials. Double-check credentials.json.")
+        sys.exit()
+
     SPOTIPY_CLIENT_ID = cid
     SPOTIPY_CLIENT_SECRET = secret
     SPOTIPY_REDIRECT_URI = 'http://localhost:8080'
-    scope = "user-library-read playlist-modify-public"
+    scope = "user-library-read playlist-modify-public playlist-modify-private"
 
     playlist_id = "4BHgp7e388zC3g7m9QA515"  # ENTER PLAYLIST ID HERE
-    edit_playlist_id = "2W6gc42AFYowduiika2sHB" # ENTER PLAYLIST TO OUTPUT TO HERE - If None, will create a new playlist.
+    edit_playlist_id = "5plV1gihgavJd8zvqGERjf" # ENTER PLAYLIST TO OUTPUT TO HERE - If None, will create a new playlist.
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI))
 
     # Get the tracks in the source playlist.
     offset = 0
-    r = sp.playlist_items(playlist_id, offset=offset, fields="items(track(name, artists(id, name), id))")
+    r = sp.playlist_items(playlist_id, offset=offset, fields="items(track(name, artists(id, name), id, uri))")
     tracks = r
 
     # Get rest of the tracks if there's over 100 in the playlist.
     while (len(r["items"]) != 0):
         offset += len(r["items"])
-        r = sp.playlist_items(playlist_id, offset=offset, fields="items(track(name, artists(id, name), id))")
+        r = sp.playlist_items(playlist_id, offset=offset, fields="items(track(name, artists(id, name), id, uri))")
 
         tracks["items"].extend(r["items"])
-        print("Additional GET made with {0} songs returned, {1} total.".format(len(r["items"]), len(tracks["items"])))
+        #print("Additional GET made with {0} songs returned, {1} total.".format(len(r["items"]), len(tracks["items"])))
 
     # Remove invalid tracks
     tracks["items"] = [x for x in tracks["items"] if validTrack(x)]
@@ -42,6 +48,8 @@ def main():
         for i, feature in enumerate(r):
             track_chunk[i]["track"]["audio_features"] = feature
 
+    with open("out.json", 'w', encoding="utf8") as f:
+        json.dump(tracks, f, indent=3, ensure_ascii=False)
 
     # Assign each song a category depending on the energy, danceability, and valence. These numbers can be tweaked to your preferences, but they're what works best for me.
     hypeTrack = []
@@ -85,16 +93,22 @@ def main():
     finalPlaylist.extend(lowChill[:len(lowChill)//2])  # lowChill upper half
 
     finalPlaylist_ids = [x["track"]["id"] for x in finalPlaylist]
+    finalPlaylist_uris = [x["track"]["uri"] for x in finalPlaylist]
 
     timeStr = time.strftime("%Y.%m.%d - %H.%M.%S").strip()
     # Edit an existing playlist
     if edit_playlist_id is not None:
-        for i, chunk in enumerate(chunks(finalPlaylist_ids, 100)):
-            if i == 0:
-                sp.playlist_replace_items(edit_playlist_id, [])
-                sp.playlist_add_items(edit_playlist_id, chunk)
+        
+        # Update playlist
+        offset = 0
+        first = True
+        for chunk in chunks(finalPlaylist_ids, 100):
+            if first:
+                sp.user_playlist_replace_tracks(sp.current_user(), edit_playlist_id, chunk)
             else:
-                sp.playlist_add_items(edit_playlist_id, chunk)
+                sp.playlist_add_items(edit_playlist_id, chunk, position=offset)
+            offset += 100
+            first = False
 
     # Make a new playlist
     else:
@@ -104,6 +118,7 @@ def main():
         for chunk in chunks(finalPlaylist_ids, 100):
             sp.playlist_add_items(edit_playlist_id, chunk)
 
+    sp.playlist_change_details(edit_playlist_id, description="This absolute BOP of a Mixtape was created by a Python script here: https://github.com/Yuzu/Mixtape-Maker")
 
     # Log changes.
     with open("{0}.txt".format(timeStr), 'w', encoding="utf8") as f:

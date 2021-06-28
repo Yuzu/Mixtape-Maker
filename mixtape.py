@@ -118,7 +118,7 @@ def main():
         for chunk in chunks(finalPlaylist_ids, 100):
             sp.playlist_add_items(edit_playlist_id, chunk)
 
-    sp.playlist_change_details(edit_playlist_id, description="This absolute BOP of a Mixtape was created by a Python script here: https://github.com/Yuzu/Mixtape-Maker")
+    sp.playlist_change_details(edit_playlist_id, description="Play UN-SHUFFLED for best results! This absolute BOP of a Mixtape was created by a Python script here: https://github.com/Yuzu/Mixtape-Maker")
 
     # Log changes.
     with open("{0}.txt".format(timeStr), 'w', encoding="utf8") as f:

@@ -69,7 +69,7 @@ def main():
 
     chillEnergy = sorted(chillTrack, key=lambda x: x["track"]["audio_features"]["energy"])
     lowChill = chillEnergy[:len(chillEnergy)//2]
-    highChill = chillEnergy[:len(chillEnergy)//2]
+    highChill = chillEnergy[len(chillEnergy)//2:]
 
     #print(len(lowHype))
     #print(len(highHype))

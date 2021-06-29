@@ -132,7 +132,7 @@ def main():
     timeStr = time.strftime("%Y.%m.%d - %H.%M.%S").strip()
     # Edit an existing playlist
     if edit_playlist_id is not None:
-        
+
         # Update playlist
         offset = 0
         first = True
@@ -143,7 +143,7 @@ def main():
                 sp.playlist_add_items(edit_playlist_id, chunk, position=offset)
             offset += 100
             first = False
-        
+
     # Make a new playlist
     else:
         r = sp.user_playlist_create(sp.current_user()["id"], "Mixtape")
@@ -182,8 +182,10 @@ def main():
 
     sys.exit()
 
+
 def usage():
     print("Usage: mixtape.py <Source Playlist ID>\nType 'mixtape.py -h' or 'mixtape.py --h' for more.")
+
 
 def help():
     print("""
@@ -192,6 +194,7 @@ def help():
         -o <Destination Playlist ID> | --output=<Destination Playlist ID>\t: The destination into which to write the songs.
         -h | --help\t: Shows this help menu
         """)
+
 
 def getCreds():
     try:

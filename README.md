@@ -4,7 +4,7 @@ Mixtape Maker is a simple Python script that will optimize your Spotify playlist
 
 ## Usage
 
-Provide a valid Client ID and Secret in credentials.json, and Spotify Playlist IDs in mixtape.py, with playlist_id representing the source playlist that you want to optimize, and edit_playlist_id being the destination for the new playlist, set to None if you want to create a new playlist.
+Provide a valid Client ID and Secret in credentials.json, and a Spotify Playlist ID as a command line argument. Run with "-h" or "--help" for more info.
 
 The program will output a timestamped .txt file with the new playlist as well.
 

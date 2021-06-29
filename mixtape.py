@@ -4,6 +4,7 @@ import json
 import random
 import time
 import sys
+import getopt
 
 
 def main():
@@ -18,8 +19,41 @@ def main():
     SPOTIPY_REDIRECT_URI = 'http://localhost:8080'
     scope = "user-library-read playlist-modify-public playlist-modify-private"
 
-    playlist_id = "4BHgp7e388zC3g7m9QA515"  # ENTER PLAYLIST ID HERE
-    edit_playlist_id = "5plV1gihgavJd8zvqGERjf" # ENTER PLAYLIST TO OUTPUT TO HERE - If None, will create a new playlist.
+
+    playlist_id = "" # 4BHgp7e388zC3g7m9QA515
+    edit_playlist_id = None # 5plV1gihgavJd8zvqGERjf If None, will create a new playlist.
+
+    #  Usage: mixtape.py <Source Playlist ID>
+
+    # Not enough args
+    if len(sys.argv) < 2:
+        help()
+        sys.exit(2)
+
+    # First arg is -h
+    elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        help()
+        sys.exit(2)
+
+    try:
+        opts, args = getopt.getopt(sys.argv[2:], "ho:", ["help", "output="])
+    except getopt.GetoptError as e:
+        usage()
+        sys.exit(2)
+
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            help()
+            sys.exit()
+        if o in ("-o", "--output"):
+            edit_playlist_id = a
+        else:
+            usage()
+            sys.exit(2)
+
+    playlist_id = sys.argv[1]
+    print("Input:" + playlist_id)
+    print("Output: " + edit_playlist_id)
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI))
 
@@ -109,7 +143,7 @@ def main():
                 sp.playlist_add_items(edit_playlist_id, chunk, position=offset)
             offset += 100
             first = False
-
+        
     # Make a new playlist
     else:
         r = sp.user_playlist_create(sp.current_user()["id"], "Mixtape")
@@ -118,11 +152,13 @@ def main():
         for chunk in chunks(finalPlaylist_ids, 100):
             sp.playlist_add_items(edit_playlist_id, chunk)
 
-    sp.playlist_change_details(edit_playlist_id, description="Play UN-SHUFFLED for best results! This absolute BOP of a Mixtape was created by a Python script here: https://github.com/Yuzu/Mixtape-Maker")
+    newName = "{0} Mixtape".format(sp.playlist(playlist_id)["name"])
+    # Append "Mixtape" to the name of the source playlist to get the new playlist name.
+    sp.playlist_change_details(edit_playlist_id, name=newName, description="Play UN-SHUFFLED for best results! This absolute BOP of a Mixtape was created by a Python script here: https://github.com/Yuzu/Mixtape-Maker")
 
     # Log changes.
     with open("{0}.txt".format(timeStr), 'w', encoding="utf8") as f:
-        f.write("TRACKS WRITTEN:")
+        f.write("TRACKS WRITTEN TO: {0}".format(newName))
         for i, track in enumerate(finalPlaylist):
             if i == 0:
                 f.write("\n*****LOW CHILL (Lower Half)*****\n")
@@ -144,6 +180,18 @@ def main():
     #with open("out.json", 'w', encoding="utf8") as f:
         #json.dump(tracks, f, indent=3, ensure_ascii=False)
 
+    sys.exit()
+
+def usage():
+    print("Usage: mixtape.py <Source Playlist ID>\nType 'mixtape.py -h' or 'mixtape.py --h' for more.")
+
+def help():
+    print("""
+        Command line options:
+        <Source Playlist ID>\t: REQUIRED, the source playlist from which the script will pull songs.
+        -o <Destination Playlist ID> | --output=<Destination Playlist ID>\t: The destination into which to write the songs.
+        -h | --help\t: Shows this help menu
+        """)
 
 def getCreds():
     try:

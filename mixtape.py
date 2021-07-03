@@ -52,8 +52,15 @@ def main():
             sys.exit(2)
 
     playlist_id = sys.argv[1]
-    print("Input:" + playlist_id)
-    print("Output: " + edit_playlist_id)
+
+    if "/playlist/" in playlist_id:
+        playlist_id = playlist_id.split("/playlist/")[1].split("?")[0]
+
+    if edit_playlist_id is not None and "/playlist/" in edit_playlist_id:
+        edit_playlist_id = edit_playlist_id.split("/playlist/")[1].split("?")[0]
+
+    print("Input:" + str(playlist_id))
+    print("Output: " + str(edit_playlist_id))
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope, client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET, redirect_uri=SPOTIPY_REDIRECT_URI))
 
@@ -190,8 +197,8 @@ def usage():
 def help():
     print("""
         Command line options:
-        <Source Playlist ID>\t: REQUIRED, the source playlist from which the script will pull songs.
-        -o <Destination Playlist ID> | --output=<Destination Playlist ID>\t: The destination into which to write the songs.
+        <Source Playlist ID/Link>\t: REQUIRED, the source playlist from which the script will pull songs.
+        -o <Destination Playlist ID> | --output=<Destination Playlist ID/Link>\t: The destination into which to write the songs.
         -h | --help\t: Shows this help menu
         """)
 

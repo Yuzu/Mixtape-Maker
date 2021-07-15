@@ -56,7 +56,7 @@ def main():
     if "/playlist/" in playlist_id:
         playlist_id = playlist_id.split("/playlist/")[1].split("?")[0]
 
-    if "/playlist/" in edit_playlist_id:
+    if edit_playlist_id is not None and "/playlist/" in edit_playlist_id:
         edit_playlist_id = edit_playlist_id.split("/playlist/")[1].split("?")[0]
 
     print("Input:" + str(playlist_id))
